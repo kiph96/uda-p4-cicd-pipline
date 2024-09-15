@@ -1,0 +1,96 @@
+name: Backend CD
+
+# When the workflow will run
+on:
+  # Triggers pull request events only for the "master" branch
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: 3.12.1
+  CONTAINER_REGISTRY: p4-udacity/fe
+  IMAGE_TAG: latest
+
+# Jobs pipline
+jobs:
+  lint:
+    name: LINT JOB
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install dependencies
+        run: pip install pipenv && pipenv install --dev
+
+      - name: Run lint
+        run: pipenv run pylint
+  test:
+    name: TEST JOB
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install dependencies
+        run: pip install pipenv && pipenv install --dev
+
+      - name: Run tests
+        run: pipenv run pytest
+
+  build:
+    name: BUILD JOB
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get AWS Credentials for Deployment
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login AWS
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build and Image to ECR
+        run: |
+          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          kubectl get svc
+          docker build -t ${{env.CONTAINER_REGISTRY}} .
+          docker tag ${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}} 262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
+          docker push 262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
+
+      - name: Deploy to AWS EKS
+        run: |
+          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          cd k8s
+          kustomize edit set image backend=262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
+          kustomize build | kubectl apply -f -

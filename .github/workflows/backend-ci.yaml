@@ -1,0 +1,69 @@
+name: Backend CI
+
+# When the workflow will run
+on:
+  # Triggers pull request events only for the "master" branch
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+env:
+  PYTHON_VERSION: 3.12.1
+  CONTAINER_REGISTRY: p4-udacity/fe
+# Jobs pipline
+jobs:
+  lint:
+    name: LINT JOB
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install dependencies
+        run: pip install pipenv && pipenv install --dev
+
+      - name: Run lint
+        run: pipenv run pylint
+
+  test:
+    name: TEST JOB
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install dependencies
+        run: pip install pipenv && pipenv install --dev
+
+      - name: Run tests
+        run: pipenv run pytest
+
+  build:
+    name: BUILD JOB
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/backend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{env.CONTAINER_REGISTRY}}:latest .

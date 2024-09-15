@@ -1,0 +1,111 @@
+name: Frontend CD
+
+# When the workflow will run
+on:
+  # Triggers pull request events only for the "master" branch
+  push:
+    branches: [ "master" ]
+
+  # Allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Environment
+env:
+  NODE_VERSION: 18.14
+  CONTAINER_REGISTRY: p4-udacity/fe
+  IMAGE_TAG: latest
+
+# Workflow
+jobs:
+  lint:
+    name: LINT JOB
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Restore Cache
+        id: cache-npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter
+        run: npm run lint
+
+  test:
+    name: TEST JOB
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./starter/frontend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test
+
+  deploy:
+    name: Deploy AWS
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    environment:
+      name : p4-udacity
+    defaults:
+      run:
+        working-directory: ./starter/frontend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Get AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login AWS
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build & Push Image To ECR
+        run: |
+          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          kubectl get svc
+          EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}' || kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "EXTERNALIP=$EXTERNALIP"
+          docker build --build-arg REACT_APP_MOVIE_API_URL=http://$EXTERNALIP -t ${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}} .
+          docker tag ${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}} 262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
+          docker push 262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
+
+      - name: Deploy To AWS EKS
+        run: |
+          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          cd k8s
+          kustomize edit set image frontend=262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
+          kustomize build | kubectl apply -f -
