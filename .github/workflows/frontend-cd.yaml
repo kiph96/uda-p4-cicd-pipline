@@ -11,7 +11,7 @@ on:
 
 # Environment
 env:
-  NODE_VERSION: 18.14
+  NODE_VERSION: 18.18.0
   CONTAINER_REGISTRY: p4-udacity/fe
   IMAGE_TAG: latest
 
