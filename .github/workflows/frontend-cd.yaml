@@ -5,14 +5,14 @@ on:
   # Triggers pull request events only for the "master" branch
   push:
     branches: [ "master" ]
-
-  # Allows to run this workflow manually from the Actions tab
+  pull_request:
+    branches: [ "master" ]
   workflow_dispatch:
 
 # Environment
 env:
   NODE_VERSION: 18.18.0
-  CONTAINER_REGISTRY: p4-udacity/fe
+  CONTAINER_REGISTRY: frontend
   IMAGE_TAG: latest
 
 # Workflow
@@ -70,8 +70,6 @@ jobs:
     name: Deploy AWS
     needs: [lint, test]
     runs-on: ubuntu-latest
-    environment:
-      name : p4-udacity
     defaults:
       run:
         working-directory: ./starter/frontend
@@ -95,7 +93,7 @@ jobs:
 
       - name: Build & Push Image To ECR
         run: |
-          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          aws eks update-kubeconfig --name cluster --region us-east-1
           kubectl get svc
           EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}' || kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "EXTERNALIP=$EXTERNALIP"
@@ -105,7 +103,7 @@ jobs:
 
       - name: Deploy To AWS EKS
         run: |
-          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          aws eks update-kubeconfig --name cluster --region us-east-1
           cd k8s
           kustomize edit set image frontend=262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
           kustomize build | kubectl apply -f -

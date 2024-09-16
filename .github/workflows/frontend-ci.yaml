@@ -3,15 +3,15 @@ name: Frontend CI
 # When the workflow will run
 on:
   # Triggers pull request events only for the "master" branch
+  push:
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
-  # Allows to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 env:
   NODE_VERSION: 18.14
-  CONTAINER_REGISTRY: p4-udacity/fe
+  CONTAINER_REGISTRY: frontend
 
 # Workflow
 jobs:

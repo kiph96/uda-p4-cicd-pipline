@@ -5,11 +5,13 @@ on:
   # Triggers pull request events only for the "master" branch
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
   workflow_dispatch:
 
 env:
   PYTHON_VERSION: 3.12.1
-  CONTAINER_REGISTRY: p4-udacity/fe
+  CONTAINER_REGISTRY: backend
   IMAGE_TAG: latest
 
 # Jobs pipline
@@ -96,7 +98,7 @@ jobs:
 
       - name: Build and Image to ECR
         run: |
-          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          aws eks update-kubeconfig --name cluster --region us-east-1
           kubectl get svc
           docker build -t ${{env.CONTAINER_REGISTRY}} .
           docker tag ${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}} 262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
@@ -104,7 +106,7 @@ jobs:
 
       - name: Deploy to AWS EKS
         run: |
-          aws eks update-kubeconfig --name p4-udacity --region us-east-1
+          aws eks update-kubeconfig --name cluster --region us-east-1
           cd k8s
           kustomize edit set image backend=262724436437.dkr.ecr.us-east-1.amazonaws.com/${{env.CONTAINER_REGISTRY}}:${{env.IMAGE_TAG}}
           kustomize build | kubectl apply -f -

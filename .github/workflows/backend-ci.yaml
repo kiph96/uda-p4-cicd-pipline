@@ -3,12 +3,14 @@ name: Backend CI
 # When the workflow will run
 on:
   # Triggers pull request events only for the "master" branch
+  push:
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
 env:
   PYTHON_VERSION: 3.12.1
-  CONTAINER_REGISTRY: p4-udacity/fe
+  CONTAINER_REGISTRY: backend
 # Jobs pipline
 jobs:
   lint:
