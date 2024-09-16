@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 18.14
+  NODE_VERSION: 18.18.0
   CONTAINER_REGISTRY: frontend
 
 # Workflow
@@ -40,7 +40,6 @@ jobs:
       - name: Install dependencies
         run: |
            npm ci
-           npm install prettier --save-dev
            npm install eslint --save-dev
 
       - name: Run linter

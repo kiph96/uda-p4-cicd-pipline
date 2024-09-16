@@ -63,8 +63,7 @@ jobs:
         run: pipenv install
 
       - name: Run Backend Tests
-        run: |
-          pipenv run test
+        run: pipenv run test
 
   build:
     name: BUILD JOB
