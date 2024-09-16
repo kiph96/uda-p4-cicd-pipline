@@ -2,16 +2,17 @@ name: Backend CI
 
 # When the workflow will run
 on:
-  # Triggers pull request events only for the "master" branch
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
+
 env:
   PYTHON_VERSION: 3.12.1
   CONTAINER_REGISTRY: backend
-# Jobs pipline
+
+# Jobs pipeline
 jobs:
   lint:
     name: LINT JOB
@@ -26,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{env.PYTHON_VERSION}}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -49,10 +50,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Python Environment
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{env.PYTHON_VERSION}}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -62,7 +63,7 @@ jobs:
       - name: Install testing dependencies
         run: pipenv install
 
-      - name: Run Backend Tests
+      - name: Run tests
         run: pipenv run test
 
   build:
@@ -73,9 +74,17 @@ jobs:
       run:
         working-directory: ./starter/backend
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: pipenv install
 
       - name: Build Docker image
         run: |
-          docker build -t ${{env.CONTAINER_REGISTRY}}:latest .
+          docker build -t ${{ env.CONTAINER_REGISTRY }}:latest .
