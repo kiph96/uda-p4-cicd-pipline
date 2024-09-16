@@ -2,7 +2,6 @@ name: Frontend CI
 
 # When the workflow will run
 on:
-  # Triggers pull request events only for the "master" branch
   push:
     branches: [ "master" ]
   pull_request:
@@ -28,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore Cache
         id: cache-npm
@@ -58,7 +57,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore Cache
         id: cache-npm-test
@@ -86,21 +85,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Docker Build
-        run: |
-          docker build -t ${{env.CONTAINER_REGISTRY}}:latest .
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore Cache
-        id: cache-npm-test
+        id: cache-npm-build
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: npm-cache-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: |
-          npm ci
-          npm install prettier --save-dev
+        run: npm ci
 
-      - name: Run test
+      - name: Docker Build
+        run: |
+          docker build -t ${{ env.CONTAINER_REGISTRY }}:latest .
+
+      - name: Run tests
         run: npm run test
