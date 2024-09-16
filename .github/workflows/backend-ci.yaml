@@ -77,14 +77,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: pipenv install
-
       - name: Build Docker image
         run: |
           docker build -t ${{ env.CONTAINER_REGISTRY }}:latest .
