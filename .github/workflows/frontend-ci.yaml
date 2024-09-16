@@ -38,7 +38,10 @@ jobs:
           key: npm-cache-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+           npm ci
+           npm install prettier --save-dev
+           npm install eslint --save-dev
 
       - name: Run linter
         run: npm run lint
@@ -66,7 +69,9 @@ jobs:
           key: npm-cache-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci
+          npm install prettier --save-dev
 
       - name: Run tests
         run: npm run test
@@ -94,7 +99,9 @@ jobs:
           key: npm-cache-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci
+          npm install prettier --save-dev
 
       - name: Run test
         run: npm run test
