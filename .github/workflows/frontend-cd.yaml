@@ -2,7 +2,6 @@ name: Frontend CD
 
 # When the workflow will run
 on:
-  # Triggers pull request events only for the "master" branch
   push:
     branches: [ "master" ]
   pull_request:
