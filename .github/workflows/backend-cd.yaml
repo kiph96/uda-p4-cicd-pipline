@@ -108,7 +108,6 @@ jobs:
 
       - name: Build and Push Image to ECR
         run: |
-          aws eks update-kubeconfig --name cluster --region us-east-1
           kubectl get svc
           docker build -t ${{ env.CONTAINER_REGISTRY }} .
           docker tag ${{ env.CONTAINER_REGISTRY }}:${{ env.IMAGE_TAG }} 262724436437.dkr.ecr.us-east-1.amazonaws.com/${{ env.CONTAINER_REGISTRY }}:${{ env.IMAGE_TAG }}

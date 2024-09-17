@@ -102,7 +102,6 @@ jobs:
 
       - name: Build & Push Image To ECR
         run: |
-          aws eks update-kubeconfig --name cluster --region us-east-1
           kubectl get svc
           EXTERNALIP=$(kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}' || kubectl get svc backend -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "EXTERNALIP=$EXTERNALIP"
