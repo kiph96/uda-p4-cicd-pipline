@@ -96,6 +96,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Set Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          aws eks update-kubeconfig --name cluster --region us-east-1 --kubeconfig ~/.kube/config
+          export KUBECONFIG=~/.kube/config
+
+      - name: Verify Kubernetes Context
+        run: |
+          kubectl config current-context
+
       - name: Build and Push Image to ECR
         run: |
           aws eks update-kubeconfig --name cluster --region us-east-1
