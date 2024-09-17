@@ -2,10 +2,8 @@ name: Frontend CD
 
 # When the workflow will run
 on:
-  pull_request:
+  push:
     branches: [ "master" ]
-  merge_group:
-    types: [checks_requested]
   workflow_dispatch:
 
 # Environment
