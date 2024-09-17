@@ -2,8 +2,6 @@ name: Frontend CI
 
 # When the workflow will run
 on:
-  push:
-    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
