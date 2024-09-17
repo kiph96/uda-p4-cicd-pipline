@@ -2,8 +2,10 @@ name: Backend CD
 
 # When the workflow will run
 on:
-  merge_group:
+  pull_request:
     branches: [ "master" ]
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
 
 env:
