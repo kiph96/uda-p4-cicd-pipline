@@ -72,7 +72,7 @@ jobs:
           pipenv run test
 
   build:
-    name: BUILD JOB
+    name: Deploy AWS
     needs: [lint, test]
     runs-on: ubuntu-latest
     defaults:
